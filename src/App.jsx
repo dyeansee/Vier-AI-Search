@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassBackground from './components/GlassBackground';
 import Header from './components/Header';
@@ -6,7 +6,7 @@ import HeroSection from './components/HeroSection';
 import ResultsSection from './components/ResultsSection';
 import Footer from './components/Footer';
 import Strands from './components/ui/Strands';
-import { simulateSearch } from './data/mockResults';
+import useSearchStateMachine from './hooks/useSearchStateMachine';
 
 export default function App() {
   const [pageLoading, setPageLoading] = useState(true);
@@ -16,121 +16,16 @@ export default function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  const [searchState, setSearchState] = useState({
-    stage: 'idle',
-    query: '',
-    queryKey: '',
-    modelAnswers: [],
-    summaryResult: null,
-    isSearching: false,
-    currentModelIndex: -1,
-    isFollowUp: false,
-    history: [],
-    selectedModels: ['deepseek', 'tongyi', 'doubao'],
-    pathMode: 'memory',
-  });
-
-  const handleSearch = useCallback(async (queryKey, modeOrLabel = 'new') => {
-    let isFollowUp;
-    let followUpLabel = null;
-
-    if (modeOrLabel === 'memory') {
-      isFollowUp = true;
-    } else if (modeOrLabel === 'new') {
-      isFollowUp = false;
-    } else {
-      isFollowUp = true;
-      followUpLabel = modeOrLabel;
-    }
-
-    setSearchState((prev) => {
-      const newHistory = [...prev.history];
-      // 如果上一轮已完成（有答案），归档到 history
-      if (prev.stage === 'done' && prev.modelAnswers.length > 0) {
-        newHistory.push({
-          id: Date.now(),
-          query: prev.query,
-          queryKey: prev.queryKey,
-          modelAnswers: prev.modelAnswers,
-          summaryResult: prev.summaryResult,
-          isFollowUp: prev.isFollowUp,
-        });
-      }
-      return {
-        ...prev,
-        history: newHistory,
-        query: followUpLabel || prev.query,
-        queryKey: queryKey,
-        isSearching: true,
-        stage: 'searching',
-        modelAnswers: [],
-        summaryResult: null,
-        currentModelIndex: -1,
-        isFollowUp,
-      };
-    });
-
-    await simulateSearch(queryKey, (progress) => {
-      setSearchState((prev) => ({
-        ...prev,
-        stage: progress.stage,
-        modelAnswers: progress.answers || prev.modelAnswers,
-        currentModelIndex: progress.modelIndex ?? prev.currentModelIndex,
-        summaryResult: progress.summary || null,
-        isSearching: progress.stage !== 'done',
-        isFollowUp: progress.isFollowUp || prev.isFollowUp,
-      }));
-    }, isFollowUp);
-  }, []);
-
-  const handleStopSearch = useCallback(() => {
-    setSearchState((prev) => ({
-      ...prev,
-      isSearching: false,
-      stage: prev.modelAnswers.length > 0 ? 'done' : 'idle',
-    }));
-  }, []);
-
-  const handleNewSearch = useCallback(() => {
-    setSearchState({
-      stage: 'idle',
-      query: '',
-      queryKey: '',
-      modelAnswers: [],
-      summaryResult: null,
-      isSearching: false,
-      currentModelIndex: -1,
-      isFollowUp: false,
-      history: [],
-      selectedModels: ['deepseek', 'tongyi', 'doubao'],
-      pathMode: 'memory',
-    });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
-
-  const handlePresetSearch = useCallback(
-    (key, label) => {
-      setSearchState((prev) => ({ ...prev, query: label }));
-      handleSearch(key);
-    },
-    [handleSearch]
-  );
-
-  const handlePathModeChange = useCallback((mode) => {
-    setSearchState((prev) => ({ ...prev, pathMode: mode }));
-  }, []);
-
-  const handleFollowUp = useCallback(
-    (key, label) => {
-      setSearchState((prev) => ({ ...prev, query: label }));
-      handleSearch(key, 'memory');
-    },
-    [handleSearch]
-  );
-
-  const handleModelSelection = useCallback((models) => {
-    setSearchState((prev) => ({ ...prev, selectedModels: models }));
-  }, []);
+  const {
+    searchState,
+    handleSearch,
+    handleStopSearch,
+    handleNewSearch,
+    handlePresetSearch,
+    handlePathModeChange,
+    handleFollowUp,
+    handleModelSelection,
+  } = useSearchStateMachine();
 
   const showResults = searchState.stage !== 'idle';
 
