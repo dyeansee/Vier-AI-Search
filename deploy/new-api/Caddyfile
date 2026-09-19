@@ -1,0 +1,5 @@
+# 自动申请/续期 Let's Encrypt 证书，改成你的子域名即可
+gw.vier.cc {
+	encode gzip
+	reverse_proxy new-api:3000
+}

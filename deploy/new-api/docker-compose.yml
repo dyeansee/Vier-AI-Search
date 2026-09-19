@@ -1,0 +1,39 @@
+# ============================================================
+# New API 网关 一键部署（VPS 上执行）
+# 使用: 复制 .env.example 为 .env 填好后 docker compose up -d
+# ============================================================
+services:
+  new-api:
+    image: calciumion/new-api:latest
+    container_name: new-api
+    restart: always
+    environment:
+      - TZ=Asia/Shanghai
+      # 会话密钥，泄露会导致登录态伪造，务必改成随机串（openssl rand -hex 32）
+      - SESSION_SECRET=${SESSION_SECRET}
+    volumes:
+      # SQLite 数据库 + 日志都在这里，备份只需备这个目录
+      - ./data:/data
+    expose:
+      - "3000"
+    networks: [gw]
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [gw]
+
+networks:
+  gw:
+
+volumes:
+  caddy_data:
+  caddy_config:
