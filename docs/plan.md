@@ -16,7 +16,7 @@
 - 文件：src/index.css
 
 ## Task 3: Header 组件 ✅
-- LogoIcon + ShinyText "PolyGlass" + "多模型聚合搜索"
+- LogoIcon + ShinyText "Gravlens" + "引力透镜" + "多模型聚合搜索"
 - backdrop-blur, 点击Logo重置搜索
 - 文件：src/components/Header.jsx
 

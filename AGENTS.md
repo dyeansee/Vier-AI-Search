@@ -1,4 +1,4 @@
-# AGENTS.md — PolyGlass AI 聚合搜索原型
+# AGENTS.md — Gravlens 引力透镜 AI 聚合搜索原型
 
 > 面向 AI Agent 的项目上下文入口。本项目为纯前端原型，无后端依赖。
 
@@ -6,7 +6,7 @@
 
 「AI 答案验证引擎」——用户输入问题后并行调用多个 AI 模型（DeepSeek / 千问 / 豆包等），流式展示各模型答案，再由总结模型生成共识/差异/建议三段式结论。解决"不敢信单一 AI 答案"的痛点。
 
-当前为 **MVP 模拟阶段**：所有模型回答和总结来自预设 mock 数据（`src/data/mockResults.js`），尚未接入真实 API。
+当前为 **MVP 模拟阶段**：模型回答和总结来自 `src/data/mockResults.js`；预设问题使用完整 mock 数据，任意问题使用通用 mock 回退。真实 API 暂不接入前端主流程。
 
 ## 技术栈
 
@@ -91,11 +91,12 @@ src/
 
 1. `npm run build` 零错误零警告
 2. `npm run lint` 通过（oxlint react/rules-of-hooks error 级别）
-3. 三个预设场景完整走通：idle → searching（逐模型返回）→ summarizing → done（总结卡 + 追问入口）
-4. 追问流程：点击追问建议 → 历史归档 → 新一轮 searching → done
-5. 响应式：Desktop 3 列 / Tablet 紧凑 / Mobile 单列全宽
-6. 页面加载动画（Strands WebGL）正常渲染，500ms 后 fade-out
-7. `prefers-reduced-motion` 下所有动画退化为瞬时
+3. `npm run test` 通过（vitest 状态机单元测试全部绿）
+4. 三个预设场景完整走通：idle → searching（逐模型返回）→ summarizing → done（总结卡 + 追问入口）
+5. 追问流程：点击追问建议 → 历史归档 → 新一轮 searching → done
+6. 响应式：Desktop 3 列 / Tablet 紧凑 / Mobile 单列全宽
+7. 页面加载动画（Strands WebGL）正常渲染，500ms 后 fade-out
+8. `prefers-reduced-motion` 下所有动画退化为瞬时
 
 ## 相关文档
 
@@ -107,7 +108,6 @@ src/
 
 ## 已知边界 & 遗留项
 
-- 模型选择器选中模型后并未实际过滤 `simulateSearch` 结果（P3）
-- 通用追问（非预设追问）无对应 mock 数据（P3）
-- GlassBackground 未针对 `prefers-reduced-motion` 做 Canvas 停帧降级（P3）
+- 真实模型 API 尚未接入，后端 API 目录目前作为后续接入基础保留
+- mock 搜索不提供真实来源和事实可信度，展示内容只用于交互验证
 - 构建产物体积：JS 393 KB (gzip 126 KB)、CSS 42 KB (gzip 8.4 KB)
