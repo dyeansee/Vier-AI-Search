@@ -1,5 +1,5 @@
 # CI — 自动验收边界
-# 在推送与合并请求时运行 lint + build，失败即阻断合并。
+# 在推送与合并请求时运行 lint + test + build，失败即阻断合并。
 name: CI
 
 on:
@@ -31,6 +31,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Test
+        run: npm run test
 
       - name: Build
         run: npm run build

@@ -12,6 +12,14 @@ dist
 dist-ssr
 *.local
 
+# 环境变量（密钥），模板 .env.example 除外
+.env
+.env.*
+!.env.example
+
+# New API 网关运行数据（SQLite/日志，仅存在于 VPS）
+deploy/new-api/data/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +30,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+.vercel
