@@ -82,7 +82,7 @@ export default function CollapsedBubble({ entry }) {
               />
             )}
             {entry.summaryResult && (
-              <SummaryCard summary={entry.summaryResult} stage="done" />
+              <SummaryCard summary={entry.summaryResult} />
             )}
           </motion.div>
         )}

@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "motion/react"
 
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { BorderBeam } from "./border-beam"
 import PathModeToggle from "../PathModeToggle"
 
 // ============================================================
@@ -169,7 +170,7 @@ const useFormContext = () => React.useContext(FormContext)
 const FORM_WIDTH = 360
 const FORM_HEIGHT = 240
 
-export function MorphPanel({ onSearch, isSearching, onStopSearch, pathMode, onPathModeChange, hasMemory }) {
+export function MorphPanel({ onSearch, isSearching, onStopSearch, pathMode, onPathModeChange, hasMemory, onOpen }) {
   const wrapperRef = React.useRef(null)
   const textareaRef = React.useRef(null)
 
@@ -182,11 +183,12 @@ export function MorphPanel({ onSearch, isSearching, onStopSearch, pathMode, onPa
   }, [])
 
   const triggerOpen = React.useCallback(() => {
+    onOpen?.()
     setShowForm(true)
     setTimeout(() => {
       textareaRef.current?.focus()
     })
-  }, [])
+  }, [onOpen])
 
   const handleSubmit = React.useCallback((text) => {
     triggerClose()
@@ -219,29 +221,48 @@ export function MorphPanel({ onSearch, isSearching, onStopSearch, pathMode, onPa
 
   return (
     <div className="flex items-center justify-center" style={{ width: FORM_WIDTH, height: FORM_HEIGHT }}>
-      <motion.div
-        ref={wrapperRef}
-        data-panel
-        className="relative z-3 flex flex-col items-center overflow-hidden border border-white/15 bg-black"
-        initial={false}
-        animate={{
-          width: showForm ? FORM_WIDTH : "auto",
-          height: showForm ? FORM_HEIGHT : 44,
-          borderRadius: 0,
-        }}
-        transition={{
-          type: "spring",
-          stiffness: 550,
-          damping: 45,
-          mass: 0.7,
-          delay: showForm ? 0 : 0.08,
+      <BorderBeam
+        size="md"
+        colorVariant="colorful"
+        theme="dark"
+        borderRadius={0}
+        active={showForm}
+        // brightness 太高（2.2）会把每个颜色通道提亮到 255 饱和 → 冲成纯白。
+        // 回到 1.3 保留色彩，靠 opacity 变量拉满 + saturation 1.8 保持加亮加粗。
+        brightness={1.3}
+        saturation={1.8}
+        style={{
+          // 包内 md/dark 预设透明度太低（stroke 0.26 / inner 0.42 / bloom 0.24），
+          // 用 CSS 变量放大（>1 可超出预设）：描边×4、内层×2.5、外发光×4。
+          '--beam-stroke-opacity': '4',
+          '--beam-inner-opacity': '2.5',
+          '--beam-bloom-opacity': '4',
         }}
       >
-        <FormContext.Provider value={ctx}>
-          <DockBar />
-          <InputForm ref={textareaRef} />
-        </FormContext.Provider>
-      </motion.div>
+        <motion.div
+          ref={wrapperRef}
+          data-panel
+          className="relative z-3 flex flex-col items-center overflow-hidden border border-white/15 bg-black"
+          initial={false}
+          animate={{
+            width: showForm ? FORM_WIDTH : "auto",
+            height: showForm ? FORM_HEIGHT : 44,
+            borderRadius: 0,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 550,
+            damping: 45,
+            mass: 0.7,
+            delay: showForm ? 0 : 0.08,
+          }}
+        >
+          <FormContext.Provider value={ctx}>
+            <DockBar />
+            <InputForm ref={textareaRef} />
+          </FormContext.Provider>
+        </motion.div>
+      </BorderBeam>
     </div>
   )
 }
@@ -250,7 +271,7 @@ export function MorphPanel({ onSearch, isSearching, onStopSearch, pathMode, onPa
 // DockBar — Collapsed state
 // ============================================================
 function DockBar() {
-  const { showForm, triggerOpen, isSearching } = useFormContext()
+  const { showForm, triggerOpen, isSearching, handleStop } = useFormContext()
   return (
     <footer className="mt-auto flex h-[44px] items-center justify-center whitespace-nowrap select-none">
       <div className="flex items-center justify-center gap-2 px-3">
@@ -278,11 +299,31 @@ function DockBar() {
           </AnimatePresence>
         </div>
 
+        {/* 搜索中：思考中左侧的停止按钮 */}
+        {isSearching && !showForm && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              handleStop()
+            }}
+            aria-label="停止搜索"
+            title="停止搜索"
+            className="flex items-center justify-center w-5 h-5 cursor-pointer group"
+          >
+            <span className="w-3.5 h-3.5 border border-white/40 flex items-center justify-center group-hover:border-white/70 transition-colors">
+              <span className="w-1.5 h-1.5 bg-white/60 group-hover:bg-white/90 transition-colors" />
+            </span>
+          </button>
+        )}
+
         <Button
           type="button"
           className="flex h-fit flex-1 justify-end px-2 !py-0.5"
           variant="ghost"
           onClick={triggerOpen}
+          aria-label="小昕 · Singularity"
+          title="小昕 · Singularity"
         >
           <span className="truncate text-sm text-[#F8F8F8]">
             {isSearching ? (
@@ -306,7 +347,7 @@ function DockBar() {
                   />
                 </span>
               </span>
-            ) : "问AI"}
+            ) : "问昕"}
           </span>
         </Button>
       </div>
@@ -320,7 +361,7 @@ function DockBar() {
 const SPEED_FACTOR = 1
 
 function InputForm({ ref }) {
-  const { triggerClose, showForm, handleSubmit, handleStop, isSearching, pathMode, onPathModeChange, hasMemory } = useFormContext()
+  const { triggerClose, showForm, handleSubmit, pathMode, onPathModeChange, hasMemory } = useFormContext()
   const [localValue, setLocalValue] = React.useState("")
   const btnRef = React.useRef(null)
 
@@ -341,6 +382,18 @@ function InputForm({ ref }) {
   }
 
   function handleKeyDown(e) {
+    // Alt/Ctrl+Enter 插入换行（手动插入，浏览器默认不处理）
+    if (e.key === "Enter" && (e.altKey || e.ctrlKey)) {
+      e.preventDefault()
+      const el = e.target
+      const start = el.selectionStart
+      const end = el.selectionEnd
+      setLocalValue(localValue.slice(0, start) + "\n" + localValue.slice(end))
+      requestAnimationFrame(() => {
+        el.selectionStart = el.selectionEnd = start + 1
+      })
+      return
+    }
     if (e.key === "Enter" && !e.shiftKey && !e.metaKey) {
       e.preventDefault()
       if (localValue.trim()) {
@@ -387,7 +440,7 @@ function InputForm({ ref }) {
             )}
             <textarea
               ref={ref}
-              placeholder="输入你的问题..."
+              placeholder="问问小昕..."
               name="message"
               className="h-full w-full resize-none scroll-py-2 p-4 text-sm text-[#FAFAFA] placeholder:text-[#AAAAAA] outline-none bg-transparent"
               required

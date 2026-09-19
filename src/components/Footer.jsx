@@ -11,7 +11,7 @@ export default function Footer() {
               </svg>
             </div>
             <p className="text-sm text-[#AAAAAA] font-mono tracking-wide">
-              PolyGlass — 多模型聚合搜索
+              Gravlens 引力透镜 — 多模型聚合搜索
             </p>
           </div>
           <div className="flex items-center gap-4">

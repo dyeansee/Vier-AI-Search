@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ============================
-   PolyGlass — Black Tech Minimal
+   Gravlens 引力透镜 — Black Tech Minimal
    纯黑背景 · 白色字体 · 浅灰辅助 · 直角边框
    ============================ */
 
@@ -263,5 +263,220 @@ body {
   .pill-active {
     padding: 5px 12px;
     font-size: 12px;
+  }
+}
+
+/* ============================
+   Theme — Apple-style Light（白天模式，opt-in via `html.light`）
+   仅作用于「内页」(进入站点后的内容区 .theme-surface)，
+   不影响星河/黑洞着陆模块 —— body 始终保持纯黑，星海背景不变。
+
+   苹果风格映射（暗色 → 浅色）：
+   - 主文字 #FAFAFA/#F8F8F8 → #1d1d1f（Apple 近黑）
+   - 次级 #AAAAAA → #6e6e73；三级 #555555/#888888 → #86868b
+   - 半透明白高亮层 → 半透黑；白边框 → 浅黑细线
+   - 黑面板 → 白；白底黑字徽标 → 黑底白字（反色保持辨识度）
+   - Header → 苹果玻璃（半透明白 + 模糊 + 底边细线）
+   - 卡片 → 白底圆角柔和阴影；GooeyNav → 深色药丸 + 白底幕
+   ============================ */
+html.light .theme-surface {
+  background: #f5f5f7;
+  color: #1d1d1f;
+}
+
+/* —— 文字 token —— */
+html.light .theme-surface .text-\[\#FAFAFA\],
+html.light .theme-surface .text-\[\#F8F8F8\] { color: #1d1d1f; }
+html.light .theme-surface .text-\[\#AAAAAA\] { color: #424245; }
+html.light .theme-surface .text-\[\#555555\],
+html.light .theme-surface .text-\[\#888888\] { color: #6e6e73; }
+html.light .theme-surface .text-\[\#333333\] { color: #1d1d1f; }
+
+/* —— ShinyText：文字颜色由内联 background-image 渐变 + text-fill-color:transparent 渲染，
+   CSS 普通规则赢不过内联样式，必须 !important 覆盖渐变才能翻色
+   （Header「Gravlens」、Hero 大标题、问题气泡均用此组件） —— */
+html.light .theme-surface .shiny-text {
+  background-image: linear-gradient(120deg, #1d1d1f 0%, #1d1d1f 35%, #6e6e73 50%, #1d1d1f 65%, #1d1d1f 100%) !important;
+}
+
+/* —— PathModeToggle（记忆路径切换）：胶囊/滑块/激活文字硬编码白 → 浅色 —— */
+html.light .theme-surface .liquid-path-toggle {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+html.light .theme-surface .liquid-path-label { color: #6e6e73; }
+html.light .theme-surface .liquid-path-label.active { color: #1d1d1f; }
+html.light .theme-surface .liquid-path-dot { background: #86868b; }
+html.light .theme-surface .liquid-path-dot.active-dot { background: #1d1d1f; }
+html.light .theme-surface .liquid-path-slider {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+/* —— 半透明白高亮层 → 浅色半透黑 —— */
+html.light .theme-surface .bg-white\/\[0\.02\],
+html.light .theme-surface .bg-white\/\[0\.03\],
+html.light .theme-surface .bg-white\/\[0\.04\],
+html.light .theme-surface .bg-white\/5 { background: rgba(0, 0, 0, 0.04); }
+html.light .theme-surface .bg-white\/\[0\.06\],
+html.light .theme-surface .bg-white\/\[0\.08\],
+html.light .theme-surface .bg-white\/10 { background: rgba(0, 0, 0, 0.06); }
+html.light .theme-surface .bg-white\/15 { background: rgba(0, 0, 0, 0.08); }
+html.light .theme-surface .bg-white\/20 { background: rgba(0, 0, 0, 0.1); }
+
+/* —— 深色填充条/半透明块（进度条、填充等）—— */
+html.light .theme-surface .bg-white\/40 { background: rgba(29, 29, 31, 0.45); }
+html.light .theme-surface .bg-white\/60 { background: rgba(29, 29, 31, 0.6); }
+html.light .theme-surface .bg-white\/80 { background: rgba(29, 29, 31, 0.85); }
+html.light .theme-surface .bg-white\/90 { background: rgba(29, 29, 31, 0.92); }
+
+/* —— 边框 token：白 → 浅黑细线 —— */
+html.light .theme-surface .border-white\/5 { border-color: rgba(0, 0, 0, 0.06); }
+html.light .theme-surface .border-white\/8,
+html.light .theme-surface .border-white\/10 { border-color: rgba(0, 0, 0, 0.08); }
+html.light .theme-surface .border-white\/12,
+html.light .theme-surface .border-white\/15 { border-color: rgba(0, 0, 0, 0.1); }
+html.light .theme-surface .border-white\/20,
+html.light .theme-surface .border-white\/25 { border-color: rgba(0, 0, 0, 0.12); }
+html.light .theme-surface .border-white\/40 { border-color: rgba(0, 0, 0, 0.35); }
+html.light .theme-surface .border-white\/70 { border-color: rgba(0, 0, 0, 0.65); }
+
+/* —— 面板底：黑 → 白 —— */
+html.light .theme-surface .bg-black,
+html.light .theme-surface .bg-\[\#0a0a0a\] { background: #ffffff; }
+
+/* —— 实心徽标方块：白底黑字 → 黑底白字（苹果式反色） —— */
+html.light .theme-surface .bg-white,
+html.light .theme-surface .bg-\[\#FAFAFA\] { background: #1d1d1f; }
+html.light .theme-surface .text-black { color: #ffffff; }
+html.light .theme-surface .text-black\/50 { color: rgba(255, 255, 255, 0.5); }
+
+/* —— 补充配对：选中态黑底白字 → 白底深字（模型选择器图标块） —— */
+html.light .theme-surface .text-white { color: #1d1d1f; }
+html.light .theme-surface svg[stroke="white"] { stroke: #1d1d1f; }
+
+/* —— 模态遮罩：浅色下更轻（苹果式 0.4，原 0.6 偏重） —— */
+html.light .theme-surface .bg-black\/60 { background: rgba(0, 0, 0, 0.4); }
+
+/* —— 低可信度填充加深（原 #AAAAAA 在白卡片上对比不足） —— */
+html.light .theme-surface .bg-\[\#AAAAAA\] { background: #86868b; }
+
+/* —— 苹果玻璃 Header —— */
+html.light .theme-surface header {
+  background: rgba(255, 255, 255, 0.72) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+html.light .theme-surface .bg-black\/90 { background: rgba(255, 255, 255, 0.72); }
+html.light .theme-surface .bg-black\/95 { background: rgba(255, 255, 255, 0.92); }
+
+/* —— GooeyNav 浅色：深色药丸 + 白底幕 + 深色粒子 —— */
+html.light .theme-surface .gooey-nav-container {
+  --color-1: #1d1d1f;
+  --color-2: #3a3a3c;
+  --color-3: #6e6e73;
+  --color-4: #86868b;
+}
+html.light .theme-surface .gooey-nav-container nav ul { color: #1d1d1f; }
+html.light .theme-surface .gooey-nav-container nav ul li { color: #1d1d1f; }
+html.light .theme-surface .gooey-nav-container nav ul li.active { color: #ffffff; }
+html.light .theme-surface .gooey-nav-container nav ul li.active::after { background: #1d1d1f; }
+html.light .theme-surface .gooey-nav-container .effect.text { color: #1d1d1f; }
+html.light .theme-surface .gooey-nav-container .effect.text.active { color: #ffffff; }
+html.light .theme-surface .gooey-nav-container .effect.filter::after { background: #1d1d1f; }
+/* 浅色下用 darken + 白画布：白画布在 darken 模式下中性（min(255,x)=x），
+   不会盖住相邻菜单项；同时白画布为 blur(7px) contrast(100) 提供纯色对比
+   画布，使深色药丸/粒子恢复 gooey 液态融合与粒子爆发效果。
+   沿用基础规则的 clip-path: inset(-75px -75px 67px -75px) 裁掉向下溢出。 */
+html.light .theme-surface .gooey-nav-container .effect.filter::before { background: #ffffff; }
+html.light .theme-surface .gooey-nav-container .effect.filter { mix-blend-mode: darken; }
+
+/* —— 卡片：白底圆角柔和阴影（苹果卡片） —— */
+html.light .theme-surface .border-glow-card {
+  --card-bg: #ffffff !important;
+  --border-radius: 16px !important;
+  border-radius: 16px !important;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* —— 白天模式移除全局暗角（内页已是浅色） —— */
+html.light .glass-vignette {
+  opacity: 0 !important;
+}
+
+/* ============================
+   Theme Transition — 圆形波前（View Transitions API）
+   黑 → 白：新主题从中心点向外扩散至全局
+   白 → 黑：旧主题从边缘收缩到中心点，露出新主题
+   方向由 html[data-theme-transition] 标记（切换前置，动画结束后移除）。
+   波前扫过之处，背景与文字颜色「整块」切换 —— 文字是快照的一部分，
+   因此会随波前一起变色，而不是先变色再扩散。
+   ============================ */
+:root {
+  --theme-transition-duration: 780ms;
+  --theme-transition-ease: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 关掉默认的交叉淡入淡出：cross-fade 会让新旧两层互相渗透，
+   得到的是「整体渐隐渐现」而非「圆形波前扫过」。 */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* 黑 → 白：新主题（白）在上，从中心扩散盖住旧主题（黑） */
+html[data-theme-transition='to-light']::view-transition-old(root) {
+  z-index: 1;
+}
+html[data-theme-transition='to-light']::view-transition-new(root) {
+  z-index: 2;
+  animation: theme-reveal-expand var(--theme-transition-duration) var(--theme-transition-ease) both;
+}
+
+/* 白 → 黑：旧主题（白）在上，从边缘收缩到中心，露出新主题（黑） */
+html[data-theme-transition='to-dark']::view-transition-new(root) {
+  z-index: 1;
+}
+html[data-theme-transition='to-dark']::view-transition-old(root) {
+  z-index: 2;
+  animation: theme-reveal-collapse var(--theme-transition-duration) var(--theme-transition-ease) both;
+}
+
+@keyframes theme-reveal-expand {
+  from {
+    clip-path: circle(0% at 50% 50%);
+  }
+  to {
+    clip-path: circle(150% at 50% 50%);
+  }
+}
+
+@keyframes theme-reveal-collapse {
+  from {
+    clip-path: circle(150% at 50% 50%);
+  }
+  to {
+    clip-path: circle(0% at 50% 50%);
+  }
+}
+
+/* 首屏星海层：白天模式下随波前一起隐去。
+   React 在过渡回调内同步渲染出 .is-hidden，new 快照里星空即已消失，
+   于是「星空消失」与「黑 → 白扩散」严格同步发生。 */
+.galaxy-layer {
+  transition: opacity 320ms ease;
+}
+.galaxy-layer.is-hidden {
+  opacity: 0 !important;
+}
+
+/* 尊重系统「减少动态效果」偏好：直接切，不做波前动画 */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
   }
 }

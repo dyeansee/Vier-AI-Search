@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import BorderGlow from './ui/BorderGlow';
 
-export default function SummaryCard({ summary, stage }) {
+export default function SummaryCard({ summary }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -17,7 +17,7 @@ export default function SummaryCard({ summary, stage }) {
     <BorderGlow
       backgroundColor="#0a0a0a"
       borderRadius={0}
-      glowColor="0 0 98"
+      glowColor="45 90 60"
       colors={['#FAFAFA', '#F8F8F8', '#AAAAAA']}
       glowRadius={30}
       glowIntensity={0.6}

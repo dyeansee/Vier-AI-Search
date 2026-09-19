@@ -36,9 +36,22 @@ export default function HeroSection({
   pathMode = 'memory',
   onPathModeChange,
   hasMemory = false,
+  entered = true,
+  onEnter,
 }) {
   const [showModelSelector, setShowModelSelector] = useState(false);
   const selectorRef = useRef(null);
+  const morphWrapRef = useRef(null);
+
+  // 原生 pointerdown 监听，确保首次点击问AI必定触发文字浮现（不依赖合成事件）
+  useEffect(() => {
+    if (entered) return;
+    const el = morphWrapRef.current;
+    if (!el) return;
+    const fire = () => onEnter?.();
+    el.addEventListener('pointerdown', fire, { capture: true, once: true });
+    return () => el.removeEventListener('pointerdown', fire, { capture: true });
+  }, [entered, onEnter]);
 
   useEffect(() => {
     if (!showModelSelector) return;
@@ -66,15 +79,15 @@ export default function HeroSection({
     if (!text.trim()) return;
     const matched = PRESET_QUESTIONS.find((q) => q.label === text.trim());
     if (matched) {
-      onSearch(matched.key, 'memory');
+      onSearch(matched.key, matched.label);
     } else {
-      onSearch(text, 'memory');
+      onSearch(text, text);
     }
   }, [onSearch]);
 
   const handlePresetClick = useCallback(
     (key, label) => {
-      onSearch(key, 'memory');
+      onSearch(key, label);
     },
     [onSearch]
   );
@@ -94,6 +107,7 @@ export default function HeroSection({
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
             >
+              <div style={{ opacity: entered ? 1 : 0, transition: 'opacity 0.6s ease-in-out', pointerEvents: entered ? 'auto' : 'none', userSelect: entered ? 'auto' : 'none' }}>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tighter mb-4">
                 <ShinyText
                   text="让多个AI"
@@ -120,6 +134,7 @@ export default function HeroSection({
               <p className="text-base text-[#F8F8F8] max-w-xl mx-auto mb-10 leading-relaxed">
                 同时向 DeepSeek、千问、豆包等主流模型发起搜索，AI 自动对比总结
               </p>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -129,33 +144,34 @@ export default function HeroSection({
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           className="relative mx-auto flex flex-col items-center"
         >
-          <MorphPanel
-            onSearch={handleMorphPanelSearch}
-            isSearching={isSearching}
-            onStopSearch={onStopSearch}
-            pathMode={pathMode}
-            onPathModeChange={onPathModeChange}
-            hasMemory={hasMemory}
-          />
+          {/* 搜索框自带的问AI折叠态常显，首次点击/展开时触发页面文字浮现；移动端首屏光球居于屏幕绝对中心 */}
+          <div
+            ref={morphWrapRef}
+            className={
+              entered
+                ? ''
+                : 'max-sm:fixed max-sm:left-1/2 max-sm:top-1/2 max-sm:-translate-x-1/2 max-sm:-translate-y-1/2 max-sm:z-50'
+            }
+          >
+            <MorphPanel
+              onSearch={handleMorphPanelSearch}
+              isSearching={isSearching}
+              onStopSearch={onStopSearch}
+              pathMode={pathMode}
+              onPathModeChange={onPathModeChange}
+              hasMemory={hasMemory}
+              onOpen={onEnter}
+            />
+          </div>
 
-          <AnimatePresence>
-            {isSearching && (
-              <motion.button
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                onClick={onStopSearch}
-                className="mt-3 flex items-center gap-2 px-4 py-2 text-xs font-medium text-[#FAFAFA] bg-white/[0.05] border border-white/10 hover:bg-white/[0.08] hover:border-white/20 transition-all"
-              >
-                <span className="w-3 h-3 border border-white/40 flex items-center justify-center">
-                  <span className="w-1.5 h-1.5 bg-white/60" />
-                </span>
-                停止搜索
-              </motion.button>
-            )}
-          </AnimatePresence>
-
-          <div className="relative mt-4">
+          <motion.div
+            className="relative mt-4"
+            style={{
+              opacity: entered ? 1 : 0,
+              transition: 'opacity 0.6s ease-in-out',
+              pointerEvents: entered ? 'auto' : 'none',
+            }}
+          >
             <div className="flex items-center justify-center gap-2 flex-wrap">
               {ALL_MODELS.filter((m) => selectedModels.includes(m.id)).map((m) => (
                 <span
@@ -217,7 +233,7 @@ export default function HeroSection({
                       <BorderGlow
                         backgroundColor="#0a0a0a"
                         borderRadius={0}
-                        glowColor="0 0 98"
+                        glowColor="45 90 60"
                         colors={['#FAFAFA', '#F8F8F8', '#AAAAAA']}
                         glowRadius={24}
                         glowIntensity={0.5}
@@ -292,15 +308,17 @@ export default function HeroSection({
               </AnimatePresence>,
               document.body
             )}
-          </div>
+          </motion.div>
         </motion.div>
 
         {!hasResults && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
             className="mt-8"
+            style={{
+              opacity: entered ? 1 : 0,
+              transition: 'opacity 0.6s ease-in-out',
+              pointerEvents: entered ? 'auto' : 'none',
+            }}
           >
             <p className="text-xs text-[#AAAAAA] mb-3 uppercase tracking-widest font-mono">
               试试这些问题

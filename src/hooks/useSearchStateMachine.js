@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { simulateSearch } from '../data/mockResults';
 
 export const INITIAL_STATE = {
@@ -77,6 +77,8 @@ export function reduceStopSearch(prev) {
  */
 export default function useSearchStateMachine() {
   const [searchState, setSearchState] = useState(INITIAL_STATE);
+  const searchGenerationRef = useRef(0);
+  const selectedModelsRef = useRef(INITIAL_STATE.selectedModels);
 
   const handleSearch = useCallback(async (queryKey, modeOrLabel = 'new') => {
     let isFollowUp;
@@ -91,18 +93,26 @@ export default function useSearchStateMachine() {
       followUpLabel = modeOrLabel;
     }
 
+    const generation = searchGenerationRef.current + 1;
+    searchGenerationRef.current = generation;
+    const selectedModels = selectedModelsRef.current;
+
     setSearchState((prev) => reduceStartSearch(prev, { queryKey, isFollowUp, followUpLabel }));
 
     await simulateSearch(queryKey, (progress) => {
+      if (searchGenerationRef.current !== generation) return;
       setSearchState((prev) => reduceProgress(prev, progress));
-    }, isFollowUp);
+    }, isFollowUp, selectedModels);
   }, []);
 
   const handleStopSearch = useCallback(() => {
+    searchGenerationRef.current += 1;
     setSearchState((prev) => reduceStopSearch(prev));
   }, []);
 
   const handleNewSearch = useCallback(() => {
+    searchGenerationRef.current += 1;
+    selectedModelsRef.current = INITIAL_STATE.selectedModels;
     setSearchState(INITIAL_STATE);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
@@ -128,6 +138,7 @@ export default function useSearchStateMachine() {
   );
 
   const handleModelSelection = useCallback((models) => {
+    selectedModelsRef.current = models;
     setSearchState((prev) => ({ ...prev, selectedModels: models }));
   }, []);
 

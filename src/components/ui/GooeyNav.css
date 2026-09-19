@@ -35,6 +35,8 @@
 
 .gooey-nav-container {
   position: relative;
+  /* 不限制容器大小/裁切方向：粒子向上、左、右允许飞出 Header。
+     仅"下框紧贴 Header 底"的限制交给 .effect.filter 的 clip-path。 */
 }
 
 .gooey-nav-container nav {
@@ -142,14 +144,29 @@
 .gooey-nav-container .effect.filter {
   filter: blur(7px) contrast(100) blur(0);
   mix-blend-mode: lighten;
+  /* 单方向裁切：只裁"向下"紧贴 Header 底，上/左/右不限制粒子范围。
+     粒子飞程 ~80px（particleDistances=[80,8]），故 top/left/right 用负值向外扩
+     足够覆盖飞程（让粒子向上/左右自由爆发、不被裁小到 li 框）；
+     仅 bottom = -14.5px 让可见底 viewport = 64 (Header 底)，向下不漏进 Hero。
+     计算：filter box bottom viewport≈49.5 → inset bottom = 49.5-64 = -14.5。 */
+  clip-path: inset(-100px -120px -14.5px -120px);
 }
 
+/* 黑色底幕：为 contrast(100) 提供画布，使白色药丸 + 粒子焊出 gooey 融合效果。
+   保持 inset:-75px 的大画布（缩到 inset:0 会导致模糊晕开与粒子爆发失去画布、
+   gooey 融合失效）。
+   用 clip-path 把画布精确裁到 Header 底（active li 在 Header 内垂直居中，
+   下方还有 ~15px Header 玻璃空间，足以恢复药丸/粒子的向下融合），
+   避免画布延伸进 Hero 区在浅色 darken 下漏出可见亮斑。
+   计算：Header 高 65px，li 高 35px 居中 (bottom=50)，::before box bottom=110，
+   裁到 y=65 → inset bottom = 110-65 = 45。 */
 .gooey-nav-container .effect.filter::before {
   content: '';
   position: absolute;
   inset: -75px;
   z-index: -2;
   background: #000000;
+  clip-path: inset(-75px -75px 45px -75px);
 }
 
 .gooey-nav-container .effect.filter::after {

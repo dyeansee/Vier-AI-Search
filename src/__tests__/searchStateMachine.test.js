@@ -194,7 +194,7 @@ describe('useSearchStateMachine hook — 集成行为验证', () => {
   });
 
   it('handleSearch initiates search and calls simulateSearch', async () => {
-    simulateSearch.mockImplementation(async (key, onProgress, isFollowUp) => {
+    simulateSearch.mockImplementation(async (key, onProgress) => {
       onProgress({ stage: 'searching', answers: [{ id: 'deepseek' }], modelIndex: 0 });
       onProgress({ stage: 'done', answers: [{ id: 'deepseek' }], summary: { trustScore: 90 } });
     });
@@ -205,7 +205,7 @@ describe('useSearchStateMachine hook — 集成行为验证', () => {
       await result.current.handleSearch('new_energy', 'new');
     });
 
-    expect(simulateSearch).toHaveBeenCalledWith('new_energy', expect.any(Function), false);
+    expect(simulateSearch).toHaveBeenCalledWith('new_energy', expect.any(Function), false, ['deepseek', 'tongyi', 'doubao']);
     expect(result.current.searchState.stage).toBe('done');
     expect(result.current.searchState.isSearching).toBe(false);
     expect(result.current.searchState.summaryResult).toEqual({ trustScore: 90 });
@@ -231,7 +231,7 @@ describe('useSearchStateMachine hook — 集成行为验证', () => {
 
     expect(result.current.searchState.history).toHaveLength(1);
     expect(result.current.searchState.isFollowUp).toBe(true);
-    expect(simulateSearch).toHaveBeenLastCalledWith('new_energy__brands', expect.any(Function), true);
+    expect(simulateSearch).toHaveBeenLastCalledWith('new_energy__brands', expect.any(Function), true, ['deepseek', 'tongyi', 'doubao']);
   });
 
   it('handleStopSearch during active search → done if answers exist', async () => {
@@ -244,9 +244,8 @@ describe('useSearchStateMachine hook — 集成行为验证', () => {
     const { result } = renderHook(() => useSearchStateMachine());
 
     // Start search (won't complete because of hanging promise)
-    let searchPromise;
     act(() => {
-      searchPromise = result.current.handleSearch('new_energy', 'new');
+      result.current.handleSearch('new_energy', 'new');
     });
 
     // Give microtask a tick for the first onProgress to fire
@@ -296,7 +295,7 @@ describe('useSearchStateMachine hook — 集成行为验证', () => {
       await result.current.handlePresetSearch('remote_work', '远程办公效率');
     });
 
-    expect(simulateSearch).toHaveBeenCalledWith('remote_work', expect.any(Function), false);
+    expect(simulateSearch).toHaveBeenCalledWith('remote_work', expect.any(Function), false, ['deepseek', 'tongyi', 'doubao']);
   });
 
   it('handleModelSelection updates selected models', () => {
@@ -362,6 +361,50 @@ describe('useSearchStateMachine hook — 集成行为验证', () => {
 
     // custom label (not 'new' or 'memory') → isFollowUp=true with custom label
     expect(result.current.searchState.isFollowUp).toBe(true);
-    expect(simulateSearch).toHaveBeenCalledWith('react_vue__learn', expect.any(Function), true);
+    expect(simulateSearch).toHaveBeenCalledWith('react_vue__learn', expect.any(Function), true, ['deepseek', 'tongyi', 'doubao']);
+  });
+
+  it('forwards the latest selected models to a search', async () => {
+    simulateSearch.mockImplementation(async (key, onProgress) => {
+      onProgress({ stage: 'done', answers: [{ id: 'kimi' }], summary: {} });
+    });
+
+    const { result } = renderHook(() => useSearchStateMachine());
+    act(() => {
+      result.current.handleModelSelection(['kimi']);
+    });
+
+    await act(async () => {
+      await result.current.handleSearch('任意问题', 'new');
+    });
+
+    expect(simulateSearch).toHaveBeenCalledWith('任意问题', expect.any(Function), false, ['kimi']);
+  });
+
+  it('ignores late progress from a stopped search', async () => {
+    let progress;
+    simulateSearch.mockImplementation(async (key, onProgress) => {
+      progress = onProgress;
+      await new Promise(() => {});
+    });
+
+    const { result } = renderHook(() => useSearchStateMachine());
+    act(() => {
+      result.current.handleSearch('new_energy', 'new');
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+
+    act(() => {
+      result.current.handleStopSearch();
+    });
+    act(() => {
+      progress({ stage: 'done', answers: [{ id: 'late' }], summary: { trustScore: 1 } });
+    });
+
+    expect(result.current.searchState.modelAnswers).toEqual([]);
+    expect(result.current.searchState.summaryResult).toBeNull();
+    expect(result.current.searchState.stage).toBe('idle');
   });
 });

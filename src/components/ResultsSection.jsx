@@ -16,9 +16,7 @@ export default function ResultsSection({
   currentModelIndex,
   isFollowUp,
   history,
-  isSearching,
   onFollowUp,
-  onStopSearch,
 }) {
 
   const [historyVisible, setHistoryVisible] = useState(false);
@@ -114,7 +112,7 @@ export default function ResultsSection({
             <BorderGlow
               backgroundColor="#0a0a0a"
               borderRadius={0}
-              glowColor="0 0 98"
+              glowColor="45 90 60"
               colors={['#FAFAFA', '#F8F8F8', '#AAAAAA']}
               glowRadius={20}
               glowIntensity={0.3}
@@ -147,7 +145,7 @@ export default function ResultsSection({
 
         {/* Summary Card */}
         {summaryResult && (
-          <SummaryCard summary={summaryResult} stage={stage} />
+          <SummaryCard summary={summaryResult} />
         )}
       </div>
     </section>

@@ -52,7 +52,7 @@ const BorderGlow = ({
   children,
   className = '',
   edgeSensitivity = 30,
-  glowColor = '40 80 80',
+  glowColor = '45 90 60',
   backgroundColor = '#0a0a0a',
   borderRadius = 0,
   glowRadius = 40,

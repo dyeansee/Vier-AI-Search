@@ -307,27 +307,59 @@ const followUpData = {
 export { followUpData };
 export default mockData;
 
+const createGenericData = (query, selectedModels) => {
+  const sourceModels = mockData.new_energy.models;
+  const modelIds = selectedModels?.length ? selectedModels : sourceModels.map((model) => model.id);
+  const models = modelIds.map((id, index) => {
+    const source = sourceModels.find((model) => model.id === id) || sourceModels[index % sourceModels.length];
+    return {
+      ...source,
+      id,
+      answer: `这是针对“${query}”的模拟回答。当前尚未接入真实模型，先提供一个可继续交互的演示结果。\n\n建议从目标、约束和可执行步骤三个方面继续拆解这个问题。`,
+      sources: ['Vier Search 模拟来源'],
+      consensus: ['需要结合具体场景判断'],
+    };
+  });
+
+  return {
+    query,
+    models,
+    summary: {
+      consensus: `围绕“${query}”，当前模拟结果认为应先明确问题目标，再比较不同方案的实际取舍。`,
+      divergence: '由于当前使用的是模拟回答，模型之间没有真实分歧数据可供比较。',
+      recommendation: `建议将“${query}”拆分为背景、目标、限制条件和下一步行动，再进行更具体的分析。`,
+      trustScore: 60,
+    },
+  };
+};
+
 // 模拟延迟和流式输出
 // queryKey 支持两种格式：
 //   "new_energy" → 首次搜索
 //   "new_energy__brands" → 基于记忆的追问（__ 分隔 parentKey 和 followUpKey）
-export const simulateSearch = async (queryKey, onProgress, isFollowUp = false) => {
+export const simulateSearch = async (queryKey, onProgress, isFollowUp = false, selectedModels) => {
   let data;
   if (isFollowUp) {
     data = followUpData[queryKey];
   } else {
     data = mockData[queryKey];
   }
-  if (!data) return null;
+  if (!data) data = createGenericData(queryKey, selectedModels);
+
+  const modelIds = selectedModels?.length ? new Set(selectedModels) : null;
+  const models = modelIds
+    ? data.models.filter((model) => modelIds.has(model.id))
+    : data.models;
+  if (models.length === 0) return createGenericData(queryKey, selectedModels);
 
   // 模拟搜索阶段
   onProgress?.({ stage: "searching" });
 
   // 模拟每个模型逐步返回
   const answers = [];
-  for (let i = 0; i < data.models.length; i++) {
+  for (let i = 0; i < models.length; i++) {
     await delay(800 + Math.random() * 600);
-    answers.push(data.models[i]);
+    answers.push(models[i]);
     onProgress?.({ stage: "searching", answers: [...answers], modelIndex: i });
   }
 
@@ -335,8 +367,11 @@ export const simulateSearch = async (queryKey, onProgress, isFollowUp = false) =
   onProgress?.({ stage: "summarizing" });
   await delay(1200 + Math.random() * 800);
 
-  onProgress?.({ stage: "done", summary: data.summary, answers: data.models, isFollowUp });
-  return { ...data, answers: data.models };
+  const summary = models.length === data.models.length
+    ? data.summary
+    : createGenericData(data.query, models.map((model) => model.id)).summary;
+  onProgress?.({ stage: "done", summary, answers: models, isFollowUp });
+  return { ...data, models, summary, answers: models };
 };
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
